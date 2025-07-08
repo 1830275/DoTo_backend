@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Task;
 use Illuminate\Http\Request;
+use App\Http\Requests\StoreTaskRequest;
+use App\Http\Requests\UpdateTaskRequest;
 
 class TaskController extends Controller
 {
@@ -34,15 +36,15 @@ class TaskController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(StoreTaskRequest $request)
     {
         //
-        $request->validate([
-            'name' => 'required|string',
-            'description' => 'nullable|string',
-        ]);
+        $task = Task::create($request->validated());
 
-        return Task::create($request->all());
+        return response()->json([
+            'message' => 'Tarea creada exitosamente',
+            'data' => $task
+        ], 201);
     }
 
     /**
@@ -55,7 +57,6 @@ class TaskController extends Controller
     {
         //
         return $task;
-
     }
 
     /**
@@ -76,11 +77,11 @@ class TaskController extends Controller
      * @param  \App\Task  $task
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Task $task)
+    public function update(UpdateTaskRequest $request, Task $task)
     {
-        //
         $task->update($request->all());
-        return $task;
+
+        return response()->json($task, 200);
     }
 
     /**
@@ -92,7 +93,11 @@ class TaskController extends Controller
     public function destroy(Task $task)
     {
         //
-        $task->delete();
-        return response()->noContent();
+        try {
+            $task->delete();
+            return response()->json(['message' => 'Tarea eliminada correctamente']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error al eliminar la tarea'], 500);
+        }
     }
 }
